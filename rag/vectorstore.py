@@ -1,10 +1,9 @@
 import os
+import shutil
 import streamlit as st
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
 from langchain_huggingface import HuggingFaceEmbeddings
-
 from langchain_community.vectorstores import FAISS
 
 from rag.loader import load_documents
@@ -22,6 +21,9 @@ def get_embeddings():
 
 
 def create_vectorstore():
+
+    # Clear cached FAISS object
+    load_vectorstore.clear()
 
     documents = load_documents()
 
@@ -41,6 +43,10 @@ def create_vectorstore():
     )
 
     os.makedirs("vectorstore", exist_ok=True)
+
+    # Remove previous index completely
+    if os.path.exists(DB_PATH):
+        shutil.rmtree(DB_PATH)
 
     db.save_local(DB_PATH)
 
@@ -68,9 +74,8 @@ def get_retriever():
         return None
 
     return db.as_retriever(
-    search_type="similarity",
-    search_kwargs={
-        "k": 4,
-        
-    }
-)
+        search_type="similarity",
+        search_kwargs={
+            "k": 4
+        }
+    )

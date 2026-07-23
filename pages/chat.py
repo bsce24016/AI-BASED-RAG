@@ -4,7 +4,12 @@ import streamlit as st
 from langchain_core.messages import HumanMessage, AIMessage
 
 from rag.llm import get_llm, get_rag_chain
-from rag.vectorstore import create_vectorstore, get_retriever
+from rag.vectorstore import (
+    create_vectorstore,
+    get_retriever,
+    load_vectorstore
+)
+import shutil
 from rag.memory import get_chat_history
 
 
@@ -362,7 +367,6 @@ def show():
             st.success("✅ Files uploaded successfully.")
 
         st.divider()
-
         # ==========================================
         # CREATE KB
         # ==========================================
@@ -378,7 +382,11 @@ def show():
 
             if db:
 
+                load_vectorstore.clear()
+
                 st.success("✅ Knowledge Base Created!")
+
+                st.rerun()
 
             else:
 
@@ -432,6 +440,16 @@ def show():
 
                         delete_document(file)
 
+                        if os.path.exists("vectorstore/faiss_index"):
+
+                            shutil.rmtree("vectorstore/faiss_index")
+
+                        load_vectorstore.clear()
+
+                        st.success(
+                            "Document deleted. Recreate the Knowledge Base."
+                        )
+
                         st.rerun()
 
         st.divider()
@@ -455,7 +473,9 @@ def show():
 
             st.metric(
                 "Status",
-                "Ready" if os.path.exists("vectorstore/faiss_index") else "Not Ready"
+                "✅ Ready"
+                if os.path.exists("vectorstore/faiss_index")
+                else "❌ Not Ready"
             )
 
         st.divider()
@@ -470,7 +490,10 @@ def show():
 
         for msg in st.session_state.messages:
 
-            chat_text += f"{msg['role'].upper()}\n{msg['content']}\n\n"
+            chat_text += (
+                f"{msg['role'].upper()}\n"
+                f"{msg['content']}\n\n"
+            )
 
         st.download_button(
             "📄 Download Chat",
@@ -488,7 +511,10 @@ def show():
 
         st.subheader("🟢 System Health")
 
-        st.success("Groq Connected")
-        st.success("FAISS Ready")
-        st.success("Memory Enabled")
-        st.success("Embeddings Loaded")
+        st.success("🟢 Groq Connected")
+
+        st.success("🟢 FAISS Ready")
+
+        st.success("🟢 Memory Enabled")
+
+        st.success("🟢 Embeddings Loaded")
